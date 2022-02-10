@@ -2,8 +2,41 @@
 
 HOME="$NOTES/Todo"
 TODOS="$HOME/$(date +%Y-%B-%d).md"
+INRANGE=0
 [[ ! -d "$HOME"  ]] && mkdir -p $HOME
 [[ ! -f "$TODOS" ]] && touch $TODOS
+
+Help() {
+    echo "Simple terminal todo"
+    echo "Usage: todo [OPTIONS] [COMMAND] [TASK]"
+    echo
+    echo "Commands:"
+    echo "  add		add new task"
+    echo "  remove	remove a task"
+    echo "  done		mark task as done by getting task number"
+    echo "  undone	mark task as undone by getting task number"
+    echo "  list		list of today's tasks"
+    echo "  all		list of all undone tasks from all days"
+    echo "  help  	show this message"
+    echo
+    echo "Options:"
+    echo "  -r    	run command on range. example: todo -r remove 1-3"
+    echo "  -h    	show this message"
+}
+
+while getopts "rh?" opt 
+do
+   case "$opt" in
+      r)
+        INRANGE=1 ;;
+      h\?) # display Help
+         Help
+         exit;;
+   esac
+done
+
+shift $((OPTIND-1))
+[ "${1:-}" = "--" ] && shift
 
 case $1 in
   "all") 
@@ -20,13 +53,19 @@ case $1 in
     ;;
   "add") echo -e "- [ ] ${@: 2}" >> $TODOS ;;
   "remove") 
+    if [[ $INRANGE -eq 1 ]]; then
+      START=$(echo $2 | cut -d "-" -f1)
+      END=$(echo $2 | cut -d "-" -f2)
+      sed -i "${START},${END}d" $TODOS 
+      exit 0
+    fi
     LINES="${@: 2}"
     for LINE in $LINES; do
       sed -i "${LINE}d" $TODOS 
     done  
     ;;
   "list") 
-    if [[ -s "$TODOS" ]] ; then
+    if [[ -s "$TODOS" ]]; then
       date +%Y-%B-%d
       cat -n $TODOS
     else
@@ -34,28 +73,29 @@ case $1 in
     fi
     ;;
   "done") 
+    if [[ $INRANGE -eq 1 ]]; then
+      START=$(echo $2 | cut -d "-" -f1)
+      END=$(echo $2 | cut -d "-" -f2)
+      sed -i "${START},${END}s/- \[ \]/- \[x\]/" $TODOS
+      exit 0
+    fi
     LINES="${@: 2}"
     for LINE in $LINES; do
       sed -i "${LINE}s/- \[ \]/- \[x\]/" $TODOS
     done  
     ;;
   "undone") 
+    if [[ $INRANGE -eq 1 ]]; then
+      START=$(echo $2 | cut -d "-" -f1)
+      END=$(echo $2 | cut -d "-" -f2)
+      sed -i "${START},${END}s/- \[x\]/- \[ \]/" $TODOS
+      exit 0
+    fi
     LINES="${@: 2}"
     for LINE in $LINES; do
       sed -i "${LINE}s/- \[x\]/- \[ \]/" $TODOS
     done  
     ;;
   "clean") find $HOME -type f -empty -exec rm {} + ;; 
-  *) 
-    echo "Simple terminal todo"
-    echo "Usage: todo [COMMAND] [TASK]"
-    echo
-    echo "Commands:"
-    echo "  add		add new task"
-    echo "  remove	remove a task"
-    echo "  done		mark task as done by getting task number"
-    echo "  undone	mark task as undone by getting task number"
-    echo "  list		list of today's tasks"
-    echo "  all		list of all undone tasks from all days"
-    ;;
+  *) Help ;;
 esac
