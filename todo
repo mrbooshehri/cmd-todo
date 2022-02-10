@@ -20,18 +20,31 @@ case $1 in
     ;;
   "add") echo -e "- [ ] ${@: 2}" >> $TODOS ;;
   "remove") 
-    LINE="$2"
-    sed -i "${LINE}d" $TODOS  ;;
+    LINES="${@: 2}"
+    for LINE in $LINES; do
+      sed -i "${LINE}d" $TODOS 
+    done  
+    ;;
   "list") 
-    date +%Y-%B-%d
-    cat -n $TODOS
+    if [[ -s "$TODOS" ]] ; then
+      date +%Y-%B-%d
+      cat -n $TODOS
+    else
+      echo "There is no todo to show!"
+    fi
     ;;
   "done") 
-    LINE="$2"
-    sed -i "${LINE}s/- \[ \]/- \[x\]/" $TODOS  ;;
+    LINES="${@: 2}"
+    for LINE in $LINES; do
+      sed -i "${LINE}s/- \[ \]/- \[x\]/" $TODOS
+    done  
+    ;;
   "undone") 
-    LINE="$2"
-    sed -i "${LINE}s/- \[x\]/- \[ \]/" $TODOS  ;;
+    LINES="${@: 2}"
+    for LINE in $LINES; do
+      sed -i "${LINE}s/- \[x\]/- \[ \]/" $TODOS
+    done  
+    ;;
   "clean") find $HOME -type f -empty -exec rm {} + ;; 
   *) 
     echo "Simple terminal todo"
