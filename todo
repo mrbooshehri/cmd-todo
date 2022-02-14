@@ -6,7 +6,18 @@ INRANGE=0
 [[ ! -d "$HOME"  ]] && mkdir -p $HOME
 [[ ! -f "$TODOS" ]] && touch $TODOS
 
-Help() {
+# ------------------------- complete context -------------------------
+
+declare -a COMMANDS=(add all done help home list remove undone)
+
+if [[ -n $COMP_LINE ]]; then
+    for c in "${COMMANDS[@]}"; do
+        [[ ${c:0:${#2}} == "${2,,}" ]] && echo "$c"
+    done
+    exit
+fi
+
+_help() {
     echo "Simple terminal todo"
     echo "Usage: todo [OPTIONS] [COMMAND] [TASK]"
     echo
@@ -17,6 +28,8 @@ Help() {
     echo "  undone	mark task as undone by getting task number"
     echo "  list		list of today's tasks"
     echo "  all		list of all undone tasks from all days"
+    echo "  home		returns todo's home"
+    echo "  clean		clean empty todo files"
     echo "  help  	show this message"
     echo
     echo "Options:"
@@ -29,8 +42,8 @@ do
    case "$opt" in
       r)
         INRANGE=1 ;;
-      h\?) # display Help
-         Help
+      h\?) # display _help
+         _help
          exit;;
    esac
 done
@@ -96,6 +109,10 @@ case $1 in
       sed -i "${LINE}s/- \[x\]/- \[ \]/" $TODOS
     done  
     ;;
-  "clean") find $HOME -type f -empty -exec rm {} + ;; 
-  *) Help ;;
+  "clean") find $HOME -type f -empty -delete ;; 
+  "home") 
+    echo $HOME
+    exit 0
+    ;;
+  *) _help ;;
 esac
