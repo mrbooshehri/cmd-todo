@@ -4,11 +4,10 @@ HOME="$NOTES/Todo"
 TODOS="$HOME/$(date +%Y-%B-%d).md"
 INRANGE=0
 [[ ! -d "$HOME"  ]] && mkdir -p $HOME
-[[ ! -f "$TODOS" ]] && touch $TODOS
 
 # ------------------------- complete context -------------------------
 
-declare -a COMMANDS=(add all done help home list remove undone)
+declare -a COMMANDS=(add all clean done help home list remove undone)
 
 if [[ -n $COMP_LINE ]]; then
     for c in "${COMMANDS[@]}"; do
@@ -64,8 +63,12 @@ case $1 in
       fi
     done 
     ;;
-  "add") echo -e "- [ ] ${@: 2}" >> $TODOS ;;
+  "add") 
+    [[ ! -f "$TODOS" ]] && touch $TODOS
+    echo -e "- [ ] ${@: 2}" >> $TODOS 
+    ;;
   "remove") 
+    [[ ! -f "$TODOS" ]] && echo "There is no todo file." && exit 1
     if [[ $INRANGE -eq 1 ]]; then
       START=$(echo $2 | cut -d "-" -f1)
       END=$(echo $2 | cut -d "-" -f2)
@@ -78,6 +81,7 @@ case $1 in
     done  
     ;;
   "list") 
+    [[ ! -f "$TODOS" ]] && echo "There is no todo file to list." && exit 1
     if [[ -s "$TODOS" ]]; then
       date +%Y-%B-%d
       cat -n $TODOS
