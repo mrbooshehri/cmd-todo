@@ -64,6 +64,7 @@ case $1 in
     done 
     ;;
   "add") 
+    [[ -z "${@: 2}" ]] && exit 0
     [[ ! -f "$TODOS" ]] && touch $TODOS
     echo -e "- [ ] ${@: 2}" >> $TODOS 
     ;;
@@ -116,7 +117,6 @@ case $1 in
   "clean") find $HOME -type f -empty -delete ;; 
   "home") 
     echo $HOME
-    exit 0
     ;;
   *) _help ;;
 esac
